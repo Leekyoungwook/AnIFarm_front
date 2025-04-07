@@ -68,8 +68,8 @@ const Today = () => {
       
       // 저장된 쿠키 값 확인
       const savedChunkInfo = Cookies.get('frozen_price_chunks');
-      // console.log('저장된 쿠키 원본:', savedChunkInfo);
-      // console.log('디코딩된 쿠키:', decodeURIComponent(savedChunkInfo));
+      console.log('저장된 쿠키 원본:', savedChunkInfo);
+      console.log('디코딩된 쿠키:', decodeURIComponent(savedChunkInfo));
       
       // 각 청크 저장
       let savedCount = 0;
@@ -83,8 +83,8 @@ const Today = () => {
           
           // 각 청크의 저장된 값 확인
           const savedChunk = Cookies.get(`frozen_price_chunk_${index}`);
-          // console.log(`청크 ${index} 원본:`, savedChunk);
-          // console.log(`청크 ${index} 디코딩:`, decodeURIComponent(savedChunk));
+          console.log(`청크 ${index} 원본:`, savedChunk);
+          console.log(`청크 ${index} 디코딩:`, decodeURIComponent(savedChunk));
           
           savedCount++;
         } catch (e) {
@@ -96,11 +96,11 @@ const Today = () => {
       if (savedCount === Object.keys(chunks).length) {
         setFrozenData(data);
         setLastUpdateTime(time);
-        // console.log('데이터 저장 완료:', {
-        //   totalChunks: Object.keys(chunks).length,
-        //   savedChunks: savedCount,
-        //   timestamp: time.toISOString()
-        // });
+        console.log('데이터 저장 완료:', {
+          totalChunks: Object.keys(chunks).length,
+          savedChunks: savedCount,
+          timestamp: time.toISOString()
+        });
       } else {
         throw new Error(`${Object.keys(chunks).length}개 중 ${savedCount}개의 청크만 저장됨`);
       }
@@ -149,13 +149,13 @@ const Today = () => {
     const updateTime = new Date(now);
     updateTime.setHours(15, 0, 0, 0);
 
-    // console.log('updateData 호출:', {
-    //   hasLatestData: !!latestValidData,
-    //   isWeekend,
-    //   hasValidDpr1Data,
-    //   currentTime: now.toLocaleString(),
-    //   updateTime: updateTime.toLocaleString()
-    // });
+    console.log('updateData 호출:', {
+      hasLatestData: !!latestValidData,
+      isWeekend,
+      hasValidDpr1Data,
+      currentTime: now.toLocaleString(),
+      updateTime: updateTime.toLocaleString()
+    });
 
     if (isWeekend) {
       if (frozenData && lastUpdateTime) {
@@ -180,20 +180,20 @@ const Today = () => {
           console.log('평일 오후 3시 이후: 새로운 데이터 프리징 (유효한 당일 데이터 없음)');
           setPriceData(latestValidData);
           // 저장 시점 확인
-          // console.log('데이터 저장 시도:', {
-          //   hasData: !!latestValidData,
-          //   dataKeys: Object.keys(latestValidData)
-          // });
+          console.log('데이터 저장 시도:', {
+            hasData: !!latestValidData,
+            dataKeys: Object.keys(latestValidData)
+          });
           saveToJsonFile(latestValidData, now);
         }
       } else {
-        // console.log('평일 오후 3시 이후: 새로운 데이터로 업데이트 및 프리징');
+        console.log('평일 오후 3시 이후: 새로운 데이터로 업데이트 및 프리징');
         setPriceData(latestValidData);
         // 저장 시점 확인
-        // console.log('데이터 저장 시도:', {
-        //   hasData: !!latestValidData,
-        //   dataKeys: Object.keys(latestValidData)
-        // });
+        console.log('데이터 저장 시도:', {
+          hasData: !!latestValidData,
+          dataKeys: Object.keys(latestValidData)
+        });
         saveToJsonFile(latestValidData, now);
       }
     } else {
@@ -236,46 +236,45 @@ const Today = () => {
         // API에서 새로운 데이터 가져오기
         const response = await axios.get(GET_PRICE_API_URL);
         
-        // 응답 데이터 구조 확인
-        if (response.data && response.data.data && Array.isArray(response.data.data.item)) {
+        if (response.data && response.data.data && response.data.data.item) {
           const latestValidData = {};
           let hasValidDpr1Data = false;
-
-          // item 배열을 순회
-          response.data.data.item.forEach(item => {
-            // 필요한 속성이 존재하는지 확인
-            if (!item.item_name || !item.unit || !item.category_code || !item.category_name) {
-              console.error('API 응답 데이터 형식이 올바르지 않습니다:', item);
-              return; // 필요한 속성이 없으면 다음 아이템으로 넘어감
-            }
-
-            const itemName = item.item_name;
-            const hasDpr1 = item.dpr1 !== '-' && item.dpr1 !== undefined;
-            const hasDpr2 = item.dpr2 !== '-' && item.dpr2 !== undefined;
-
-            // dpr1 또는 dpr2가 유효한 경우에만 처리
-            if (hasDpr1 || hasDpr2) {
+          
+          response.data.data.item
+            .filter(item => item.rank === '상품')
+            .forEach(item => {
+              const itemName = item.item_name;
+              const hasDpr1 = item.dpr1 !== '-';
+              const hasDpr2 = item.dpr2 !== '-';
+              
               if (hasDpr1) hasValidDpr1Data = true;
+              
+              if (!hasDpr1 && !hasDpr2) return;
 
-              const price = hasDpr1 ? item.dpr1 : item.dpr2;
-              const previousPrice = hasDpr2 ? item.dpr2 : price;
-
-              const currentPrice = Number(price.replace(/,/g, ''));
-              const lastPrice = Number(previousPrice.replace(/,/g, ''));
-
-              latestValidData[itemName] = {
-                price: price,
-                unit: item.unit,
-                date: item.day1, // 현재 날짜를 day1로 설정
-                previousDate: item.day2, // 이전 날짜를 day2로 설정
-                priceChange: currentPrice - lastPrice,
-                yesterdayPrice: lastPrice,
-                category_code: item.category_code,
-                category_name: item.category_name,
-                hasDpr1: hasDpr1
-              };
-            }
-          });
+              if (!latestValidData[itemName] || 
+                  (hasDpr1 && new Date(item.day1.replace(/[()]/g, '')) > new Date(latestValidData[itemName].date))) {
+                
+                const price = hasDpr1 ? item.dpr1 : item.dpr2;
+                const date = hasDpr1 ? item.day1 : item.day2;
+                const previousPrice = hasDpr2 ? item.dpr2 : price;
+                const previousDate = hasDpr2 ? item.day2 : date;
+                
+                const currentPrice = Number(price.replace(/,/g, ''));
+                const lastPrice = Number(previousPrice.replace(/,/g, ''));
+                
+                latestValidData[itemName] = {
+                  price: price,
+                  unit: item.unit,
+                  date: date.replace(/[()]/g, ''),
+                  previousDate: previousDate.replace(/[()]/g, ''),
+                  priceChange: currentPrice - lastPrice,
+                  yesterdayPrice: lastPrice,
+                  category_code: item.category_code,
+                  category_name: item.category_name,
+                  hasDpr1: hasDpr1
+                };
+              }
+            });
 
           // 현재 시간이 오후 3시 이전인지 확인
           const now = new Date();
@@ -312,20 +311,14 @@ const Today = () => {
             }
             
             updateData(latestValidData, now, isWeekend, hasValidDpr1Data);
-          } else {
-            console.error('API 응답 데이터 형식이 올바르지 않습니다:', response.data);
-            setError('API 응답 데이터 형식이 올바르지 않습니다.');
           }
-        } else {
-          console.error('API 응답 데이터 형식이 올바르지 않습니다:', response.data);
-          setError('API 응답 데이터 형식이 올바르지 않습니다.');
         }
       } catch (err) {
         console.error('Error fetching price data:', err);
         // API 호출 실패 시 데이터베이스에서 데이터 가져오기
         try {
           const dbResponse = await axios.get(GET_PRICE_FROM_DB_API_URL);
-          if (dbResponse.data && dbResponse.data.data && Array.isArray(dbResponse.data.data.item)) {
+          if (dbResponse.data && dbResponse.data.data && dbResponse.data.data.item) {
             const dbData = {};
             dbResponse.data.data.item.forEach(item => {
               dbData[item.item_name] = item;
@@ -360,18 +353,18 @@ const Today = () => {
       }
       timeUntilUpdate = updateTime.getTime() - now.getTime();
 
-      // console.log('다음 업데이트 시간:', {
-      //   updateTime: updateTime.toLocaleString(),
-      //   timeUntilUpdate: Math.floor(timeUntilUpdate / 1000 / 60) + '분'
-      // });
+      console.log('다음 업데이트 시간:', {
+        updateTime: updateTime.toLocaleString(),
+        timeUntilUpdate: Math.floor(timeUntilUpdate / 1000 / 60) + '분'
+      });
 
       const updateTimer = setTimeout(() => {
-        // console.log('자동 업데이트 실행');
+        console.log('자동 업데이트 실행');
         fetchPriceData();
       }, timeUntilUpdate);
 
       return () => {
-        // console.log('타이머 정리');
+        console.log('타이머 정리');
         clearTimeout(updateTimer);
       };
     }
