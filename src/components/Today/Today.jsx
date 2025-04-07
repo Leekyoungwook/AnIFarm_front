@@ -242,6 +242,12 @@ const Today = () => {
           let hasValidDpr1Data = false;
           
           response.data.data.item.forEach(item => {
+            // 필요한 속성이 존재하는지 확인
+            if (!item.item_name || !item.dpr1 || !item.dpr2 || !item.unit || !item.category_code || !item.category_name) {
+              console.error('API 응답 데이터 형식이 올바르지 않습니다:', item);
+              return; // 필요한 속성이 없으면 다음 아이템으로 넘어감
+            }
+
             const itemName = item.item_name;
             const hasDpr1 = item.dpr1 !== '-';
             const hasDpr2 = item.dpr2 !== '-';
