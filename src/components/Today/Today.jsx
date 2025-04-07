@@ -96,11 +96,11 @@ const Today = () => {
       if (savedCount === Object.keys(chunks).length) {
         setFrozenData(data);
         setLastUpdateTime(time);
-        console.log('데이터 저장 완료:', {
-          totalChunks: Object.keys(chunks).length,
-          savedChunks: savedCount,
-          timestamp: time.toISOString()
-        });
+        // console.log('데이터 저장 완료:', {
+        //   totalChunks: Object.keys(chunks).length,
+        //   savedChunks: savedCount,
+        //   timestamp: time.toISOString()
+        // });
       } else {
         throw new Error(`${Object.keys(chunks).length}개 중 ${savedCount}개의 청크만 저장됨`);
       }
