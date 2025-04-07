@@ -236,45 +236,44 @@ const Today = () => {
         // API에서 새로운 데이터 가져오기
         const response = await axios.get(GET_PRICE_API_URL);
         
-        if (response.data && response.data.data && response.data.data.item) {
+        // 응답 데이터 구조 확인
+        if (response.data && response.data.data && Array.isArray(response.data.data.item)) {
           const latestValidData = {};
           let hasValidDpr1Data = false;
           
-          response.data.data.item
-            .filter(item => item.rank === '상품')
-            .forEach(item => {
-              const itemName = item.item_name;
-              const hasDpr1 = item.dpr1 !== '-';
-              const hasDpr2 = item.dpr2 !== '-';
-              
-              if (hasDpr1) hasValidDpr1Data = true;
-              
-              if (!hasDpr1 && !hasDpr2) return;
+          response.data.data.item.forEach(item => {
+            const itemName = item.item_name;
+            const hasDpr1 = item.dpr1 !== '-';
+            const hasDpr2 = item.dpr2 !== '-';
+            
+            if (hasDpr1) hasValidDpr1Data = true;
+            
+            if (!hasDpr1 && !hasDpr2) return;
 
-              if (!latestValidData[itemName] || 
-                  (hasDpr1 && new Date(item.day1.replace(/[()]/g, '')) > new Date(latestValidData[itemName].date))) {
-                
-                const price = hasDpr1 ? item.dpr1 : item.dpr2;
-                const date = hasDpr1 ? item.day1 : item.day2;
-                const previousPrice = hasDpr2 ? item.dpr2 : price;
-                const previousDate = hasDpr2 ? item.day2 : date;
-                
-                const currentPrice = Number(price.replace(/,/g, ''));
-                const lastPrice = Number(previousPrice.replace(/,/g, ''));
-                
-                latestValidData[itemName] = {
-                  price: price,
-                  unit: item.unit,
-                  date: date.replace(/[()]/g, ''),
-                  previousDate: previousDate.replace(/[()]/g, ''),
-                  priceChange: currentPrice - lastPrice,
-                  yesterdayPrice: lastPrice,
-                  category_code: item.category_code,
-                  category_name: item.category_name,
-                  hasDpr1: hasDpr1
-                };
-              }
-            });
+            if (!latestValidData[itemName] || 
+                (hasDpr1 && new Date(item.day1.replace(/[()]/g, '')) > new Date(latestValidData[itemName].date))) {
+              
+              const price = hasDpr1 ? item.dpr1 : item.dpr2;
+              const date = hasDpr1 ? item.day1 : item.day2;
+              const previousPrice = hasDpr2 ? item.dpr2 : price;
+              const previousDate = hasDpr2 ? item.day2 : date;
+              
+              const currentPrice = Number(price.replace(/,/g, ''));
+              const lastPrice = Number(previousPrice.replace(/,/g, ''));
+              
+              latestValidData[itemName] = {
+                price: price,
+                unit: item.unit,
+                date: date.replace(/[()]/g, ''),
+                previousDate: previousDate.replace(/[()]/g, ''),
+                priceChange: currentPrice - lastPrice,
+                yesterdayPrice: lastPrice,
+                category_code: item.category_code,
+                category_name: item.category_name,
+                hasDpr1: hasDpr1
+              };
+            }
+          });
 
           // 현재 시간이 오후 3시 이전인지 확인
           const now = new Date();
@@ -324,7 +323,7 @@ const Today = () => {
         // API 호출 실패 시 데이터베이스에서 데이터 가져오기
         try {
           const dbResponse = await axios.get(GET_PRICE_FROM_DB_API_URL);
-          if (dbResponse.data && dbResponse.data.data && dbResponse.data.data.item) {
+          if (dbResponse.data && dbResponse.data.data && Array.isArray(dbResponse.data.data.item)) {
             const dbData = {};
             dbResponse.data.data.item.forEach(item => {
               dbData[item.item_name] = item;
