@@ -237,14 +237,12 @@ const Today = () => {
         const response = await axios.get(GET_PRICE_API_URL);
         
         // 응답 데이터 구조 확인
-        if (response.data && response.data.data) {
+        if (response.data && response.data.data && Array.isArray(response.data.data.item)) {
           const latestValidData = {};
           let hasValidDpr1Data = false;
 
-          // item이 배열인지 객체인지 확인
-          const items = Array.isArray(response.data.data.item) ? response.data.data.item : [response.data.data.item];
-
-          items.forEach(item => {
+          // item 배열을 순회
+          response.data.data.item.forEach(item => {
             // 필요한 속성이 존재하는지 확인
             if (!item.item_name || !item.unit || !item.category_code || !item.category_name) {
               console.error('API 응답 데이터 형식이 올바르지 않습니다:', item);
