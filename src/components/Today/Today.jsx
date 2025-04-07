@@ -311,7 +311,13 @@ const Today = () => {
             }
             
             updateData(latestValidData, now, isWeekend, hasValidDpr1Data);
+          } else {
+            console.error('API 응답 데이터 형식이 올바르지 않습니다:', response.data);
+            setError('API 응답 데이터 형식이 올바르지 않습니다.');
           }
+        } else {
+          console.error('API 응답 데이터 형식이 올바르지 않습니다:', response.data);
+          setError('API 응답 데이터 형식이 올바르지 않습니다.');
         }
       } catch (err) {
         console.error('Error fetching price data:', err);
