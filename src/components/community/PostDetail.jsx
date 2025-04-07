@@ -13,16 +13,19 @@ import Swal from "sweetalert2";
 import { jwtDecode } from "jwt-decode";
 import { rootPath } from "../../utils/apiurl";
 
+
 const PostDetail = () => {
   const { postId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+
   // Redux state에서 댓글 데이터 가져오기
   const comments = useSelector((state) => state.comments.comments);
   const commentLoading = useSelector((state) => state.comments.loading);
   const commentError = useSelector((state) => state.comments.error);
+
 
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +37,7 @@ const PostDetail = () => {
   const [replyTo, setReplyTo] = useState(null);
   const [isWritingComment, setIsWritingComment] = useState(true); // 기본 댓글 작성 모드
 
+
   // 공통 버튼 스타일을 위한 상수 추가
   const buttonStyles = {
     primary: "h-10 px-6 bg-[#3a9d1f] text-white rounded-lg hover:bg-[#0aab65] transition-all duration-200 flex items-center justify-center",
@@ -42,17 +46,20 @@ const PostDetail = () => {
     edit: "h-10 px-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all duration-200 flex items-center justify-center"
   };
 
+
   useEffect(() => {
-    // // console.log("useEffect 실행, postId:", postId);
+    // console.log("useEffect 실행, postId:", postId);
     fetchPostAndComments();
 
+
     const token = localStorage.getItem("token");
-    // // console.log("현재 토큰:", token);
+    // console.log("현재 토큰:", token);
+
 
     if (token) {
       try {
         const decoded = jwtDecode(token);
-        // // console.log("디코딩된 토큰:", decoded);
+        // console.log("디코딩된 토큰:", decoded);
         setCurrentUser(decoded);
       } catch (error) {
         console.error("토큰 디코딩 실패:", error);
@@ -61,10 +68,12 @@ const PostDetail = () => {
     }
   }, [postId, dispatch]);
 
+
   const fetchPostAndComments = async () => {
     try {
       // 게시물 데이터 가져오기
       const response = await axios.get(`${rootPath}/api/posts/${postId}`);
+
 
       if (response.data.success && response.data.data) {
         setPost(response.data.data);
@@ -87,6 +96,7 @@ const PostDetail = () => {
     }
   };
 
+
   const handleDelete = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -99,12 +109,13 @@ const PostDetail = () => {
         return;
       }
 
+
       const response = await axios.delete(`${rootPath}/api/write/${postId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      
+     
       if (response.data.success) {
         Swal.fire({
           icon: "success",
@@ -133,21 +144,25 @@ const PostDetail = () => {
     }
   };
 
+
   // CommentInput을 별도의 컴포넌트로 분리
   const CommentInputContainer = React.memo(({ onSubmit, initialValue = "", placeholder, buttonText, onCancel = null }) => {
     const [content, setContent] = useState(initialValue);
 
+
     const handleSubmit = async (e) => {
       e.preventDefault();
       if (!content.trim()) return;
-      
+     
       await onSubmit(content);
       setContent("");
     };
 
+
     const handleChange = (e) => {
       setContent(e.target.value);
     };
+
 
     return (
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -155,7 +170,7 @@ const PostDetail = () => {
           value={content}
           onChange={handleChange}
           className="w-full p-3 border-2 border-gray-300 rounded-lg
-          focus:border-[#3a9d1f] focus:ring-2 focus:ring-green-200 
+          focus:border-[#3a9d1f] focus:ring-2 focus:ring-green-200
           transition-all duration-200 resize-y min-h-[100px]"
           placeholder={placeholder}
           rows="3"
@@ -182,10 +197,12 @@ const PostDetail = () => {
     );
   });
 
+
   // 댓글 입력 핸들러 최적화
   const handleCommentChange = React.useCallback((e) => {
     setNewComment(e.target.value);
   }, []);
+
 
   // 댓글 제출 핸들러 최적화
   const handleCommentSubmit = React.useCallback(async (content) => {
@@ -200,6 +217,7 @@ const PostDetail = () => {
         return;
       }
 
+
       const resultAction = await dispatch(
         createComment({
           post_id: parseInt(postId),
@@ -207,6 +225,7 @@ const PostDetail = () => {
           parent_id: replyTo
         })
       );
+
 
       if (createComment.fulfilled.match(resultAction)) {
         setReplyTo(null);
@@ -230,6 +249,7 @@ const PostDetail = () => {
     }
   }, [postId, replyTo, dispatch]);
 
+
   const handleEditPost = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -241,6 +261,7 @@ const PostDetail = () => {
         });
         return;
       }
+
 
       const response = await axios.put(
         `${rootPath}/api/posts/${postId}`,
@@ -258,6 +279,7 @@ const PostDetail = () => {
         }
       );
 
+
       if (response.data.success) {
         setIsEditing(false);
         await Swal.fire({
@@ -273,7 +295,7 @@ const PostDetail = () => {
       }
     } catch (error) {
       console.error("게시글 수정 실패:", error);
-      
+     
       let errorMessage = "게시글 수정 중 오류가 발생했습니다.";
       if (error.response?.status === 401) {
         errorMessage = "로그인이 필요하거나 인증이 만료되었습니다.";
@@ -283,6 +305,7 @@ const PostDetail = () => {
         errorMessage = error.response.data.detail;
       }
 
+
       await Swal.fire({
         icon: "error",
         title: "오류 발생",
@@ -290,6 +313,7 @@ const PostDetail = () => {
       });
     }
   };
+
 
   const handleEditComment = async (commentId) => {
     try {
@@ -302,15 +326,16 @@ const PostDetail = () => {
         return;
       }
 
+
       const result = await dispatch(editComment(commentId, editedContent, postId));
-      
+     
       if (result && result.success) {
         setEditingCommentId(null);
         setEditedContent("");
-        
+       
         // 댓글 목록 새로고침
         await dispatch(fetchComments(postId));
-        
+       
         Swal.fire({
           icon: "success",
           title: "성공",
@@ -318,18 +343,22 @@ const PostDetail = () => {
           showConfirmButton: false,
           timer: 1500
         });
-      } else {
-        throw new Error(result?.message || "댓글 수정에 실패했습니다.");
       }
     } catch (error) {
       console.error("댓글 수정 실패:", error);
-      Swal.fire({
-        icon: "error",
-        title: "오류",
-        text: error.message || "댓글 수정에 실패했습니다.",
-      });
+      if (error.message.includes('로그인')) {
+        // 로그인 관련 오류인 경우 로그인 페이지로 이동
+        window.location.href = '/login';
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "오류",
+          text: error.message || "댓글 수정에 실패했습니다.",
+        });
+      }
     }
   };
+
 
   const handleDeleteComment = async (commentId) => {
     try {
@@ -344,6 +373,7 @@ const PostDetail = () => {
         return;
       }
 
+
       const result = await Swal.fire({
         title: "댓글을 삭제하시겠습니까?",
         text: "삭제된 댓글은 복구할 수 없습니다.",
@@ -355,12 +385,14 @@ const PostDetail = () => {
         cancelButtonText: "취소",
       });
 
+
       if (result.isConfirmed) {
         const response = await axios.delete(`${rootPath}/api/comments/${commentId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+
 
         if (response.data.success) {
           Swal.fire({
@@ -394,6 +426,7 @@ const PostDetail = () => {
     }
   };
 
+
   const getCategoryName = (category) => {
     const categories = {
       general: "일반 토론",
@@ -410,13 +443,16 @@ const PostDetail = () => {
     return categories[category] || category;
   };
 
+
   const isPostAuthor = () => {
     return currentUser && post && post.email === currentUser.sub;
   };
 
+
   const isCommentAuthor = (comment) => {
     return currentUser && comment && comment.email === currentUser.sub;
   };
+
 
   // 카테고리 옵션 함수 추가
   const getCategoryOptions = (communityType) => {
@@ -443,6 +479,7 @@ const PostDetail = () => {
     }
   };
 
+
   // 이메일을 사용자명으로 변환하는 함수 추가
   const formatUserEmail = (email) => {
     if (!email) return '';
@@ -450,13 +487,14 @@ const PostDetail = () => {
     return `${username.slice(0, 2)}***@${domain}`;
   };
 
+
   // 댓글 렌더링 함수 수정
   const renderComments = (comments, parentId = null, depth = 0) => {
     return comments
       .filter(comment => comment.parent_id === parentId)
       .map(comment => (
-        <div 
-          key={comment.comment_id} 
+        <div
+          key={comment.comment_id}
           className={`relative border-t border-b border-gray-200
             ${depth > 0 ? 'ml-8 pl-4' : ''}`}
         >
@@ -466,15 +504,15 @@ const PostDetail = () => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center">
                   <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <svg 
+                    <svg
                       className="w-5 h-5 text-gray-500"
-                      fill="currentColor" 
+                      fill="currentColor"
                       viewBox="0 0 20 20"
                     >
-                      <path 
-                        fillRule="evenodd" 
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" 
-                        clipRule="evenodd" 
+                      <path
+                        fillRule="evenodd"
+                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                        clipRule="evenodd"
                       />
                     </svg>
                   </div>
@@ -497,6 +535,7 @@ const PostDetail = () => {
               </div>
             </div>
 
+
             {/* 댓글 내용 */}
             {editingCommentId === comment.comment_id ? (
               <div className="space-y-2 pl-11">
@@ -504,7 +543,7 @@ const PostDetail = () => {
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded-lg
-                  focus:border-blue-500 focus:ring-1 focus:ring-blue-200 
+                  focus:border-blue-500 focus:ring-1 focus:ring-blue-200
                   transition-all duration-200 resize-none"
                   rows="2"
                 />
@@ -571,6 +610,7 @@ const PostDetail = () => {
               </>
             )}
 
+
             {/* 답글 입력 폼 */}
             {replyTo === comment.comment_id && (
               <div className="mt-2 pl-11">
@@ -587,11 +627,13 @@ const PostDetail = () => {
             )}
           </div>
 
+
           {/* 대댓글 렌더링 */}
           {renderComments(comments, comment.comment_id, depth + 1)}
         </div>
       ));
   };
+
 
   if (loading || !post) {
     return (
@@ -600,6 +642,7 @@ const PostDetail = () => {
       </div>
     );
   }
+
 
   return (
     <div className="container mx-auto p-2 max-w-4xl">
@@ -616,6 +659,7 @@ const PostDetail = () => {
         </button>
       </div>
 
+
       {/* 모바일 상단 네비게이션 */}
       <div className="md:hidden flex items-center my-2">
         <button
@@ -628,6 +672,7 @@ const PostDetail = () => {
           목록으로
         </button>
       </div>
+
 
       <div className="bg-white rounded-lg shadow-md p-3 md:p-6 mb-4 border border-gray-200">
         <div className="flex flex-col mb-3 md:mb-4">
@@ -672,6 +717,7 @@ const PostDetail = () => {
           )}
         </div>
 
+
         <div className="border-t border-b py-3 md:py-4 mb-3 md:mb-4">
           {isEditing ? (
             <textarea
@@ -684,6 +730,7 @@ const PostDetail = () => {
             <p className="whitespace-pre-wrap text-sm md:text-base">{post.content}</p>
           )}
         </div>
+
 
         {isPostAuthor() && (
           <div className="flex justify-end space-x-2">
@@ -722,6 +769,7 @@ const PostDetail = () => {
         )}
       </div>
 
+
       {/* 댓글 섹션 */}
       <div className="bg-white rounded-lg shadow-md p-3 md:p-6 border border-gray-200 mb-2">
         <h2 className="text-lg md:text-xl font-bold mb-4">댓글</h2>
@@ -746,4 +794,10 @@ const PostDetail = () => {
   );
 };
 
+
 export default PostDetail;
+
+
+
+
+

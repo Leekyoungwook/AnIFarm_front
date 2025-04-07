@@ -3,12 +3,14 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { rootPath } from "../../utils/apiurl";
 
+
 const initialState = {
   comments: [],
   myComments: [],
   loading: false,
   error: null,
 };
+
 
 const commentSlice = createSlice({
   name: "comments",
@@ -121,6 +123,7 @@ const commentSlice = createSlice({
   },
 });
 
+
 // 액션 생성자
 export const {
   setLoading,
@@ -132,6 +135,7 @@ export const {
   setMyComments,
 } = commentSlice.actions;
 
+
 // Thunk 액션 생성자
 export const fetchComments = createAsyncThunk(
   'comments/fetchComments',
@@ -140,6 +144,7 @@ export const fetchComments = createAsyncThunk(
     return response.data.data;
   }
 );
+
 
 export const createComment = createAsyncThunk(
   'comments/createComment',
@@ -150,8 +155,10 @@ export const createComment = createAsyncThunk(
         return rejectWithValue("로그인이 필요합니다.");
       }
 
+
       const decoded = jwtDecode(token);
       const userEmail = decoded.sub;
+
 
       const requestData = {
         post_id: parseInt(commentData.post_id),
@@ -160,11 +167,13 @@ export const createComment = createAsyncThunk(
         parent_id: commentData.parent_id || null
       };
 
+
       const response = await axios.post(`${rootPath}/api/comments`, requestData, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
+
 
       if (response.data.success) {
         const newComment = response.data.data;
@@ -179,19 +188,39 @@ export const createComment = createAsyncThunk(
   }
 );
 
+
 export const editComment = (commentId, content, postId) => async (dispatch) => {
   try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('로그인이 필요합니다.');
+    }
+
+
     const response = await axios.put(`${rootPath}/api/comments/${commentId}`, {
       content: content.trim()
+    }, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     });
+
+
     if (response.data.success) {
       dispatch(updateComment({ comment_id: commentId, content }));
       dispatch(fetchComments(postId));
+      return { success: true, data: response.data.data };
+    } else {
+      throw new Error(response.data.message || "댓글 수정에 실패했습니다.");
     }
   } catch (error) {
-    dispatch(setError(error.message || "댓글 수정에 실패했습니다."));
+    if (error.response?.status === 401) {
+      throw new Error('로그인이 만료되었습니다. 다시 로그인해주세요.');
+    }
+    throw new Error(error.message || "댓글 수정에 실패했습니다.");
   }
 };
+
 
 export const deleteComment = createAsyncThunk(
   'comments/deleteComment',
@@ -205,6 +234,7 @@ export const deleteComment = createAsyncThunk(
   }
 );
 
+
 export const fetchMyComments = createAsyncThunk(
   'comments/fetchMyComments',
   async (_, { rejectWithValue }) => {
@@ -217,6 +247,13 @@ export const fetchMyComments = createAsyncThunk(
   }
 );
 
+
 export const selectMyComments = (state) => state.comments.myComments;
 
+
 export default commentSlice.reducer;
+
+
+
+
+

@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchYoungFarmerList, setCategory } from '../../redux/slices/youngFarmerSlice';
 import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
+
 const YoungFarmer = () => {
   const dispatch = useDispatch();
   const { farmerList, loading, selectedCategory } = useSelector(state => state?.youngFarmer) || {
@@ -12,9 +13,11 @@ const YoungFarmer = () => {
     selectedCategory: "01"
   };
 
+
   // 페이지네이션 상태
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6; // 한 페이지당 보여줄 아이템 수
+
 
   // 카테고리 정의
   const categories = [
@@ -22,21 +25,27 @@ const YoungFarmer = () => {
     { code: "02", name: "청년농 홍보영상", icon: "🎥" }
   ];
 
+
   // 현재 페이지의 데이터만 필터링
   const getCurrentPageData = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
-    return farmerList.slice(startIndex, endIndex);
+    return farmerList
+      .filter(farmer => farmer.bbsInfo08) // bbsInfo08 값이 있는 항목만 필터링
+      .slice(startIndex, endIndex);
   };
 
+
   // 총 페이지 수 계산
-  const totalPages = Math.ceil((farmerList?.length || 0) / itemsPerPage);
+  const totalPages = Math.ceil((farmerList?.filter(farmer => farmer.bbsInfo08)?.length || 0) / itemsPerPage);
+
 
   // 페이지 변경 핸들러
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
 
   // 카테고리 변경 핸들러
   const handleCategoryChange = (categoryCode) => {
@@ -45,13 +54,15 @@ const YoungFarmer = () => {
     setCurrentPage(1); // 카테고리 변경 시 첫 페이지로 리셋
   };
 
+
   useEffect(() => {
     dispatch(fetchYoungFarmerList({ s_code: selectedCategory, page: 1 }));
   }, [dispatch]);
 
+
   // 사례 카드 컴포넌트
   const renderFarmerCard = (farmer) => (
-    <motion.div 
+    <motion.div
       key={farmer.bbsSeq}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -78,9 +89,9 @@ const YoungFarmer = () => {
         </div>
       </div>
       {farmer.bbsInfo08 && (
-        <a 
-          href={farmer.bbsInfo08} 
-          target="_blank" 
+        <a
+          href={farmer.bbsInfo08}
+          target="_blank"
           rel="noopener noreferrer"
           className="inline-block bg-[#3a9d1f] text-white px-4 py-2 rounded-md hover:bg-[#0aab65] transition-colors text-sm w-full text-center mt-auto"
         >
@@ -90,17 +101,21 @@ const YoungFarmer = () => {
     </motion.div>
   );
 
+
   // 페이지네이션 컴포넌트
   const renderPagination = () => {
     const pages = [];
     const maxVisiblePages = 5; // 한 번에 보여줄 최대 페이지 번호 수
 
+
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
 
     if (endPage - startPage + 1 < maxVisiblePages) {
       startPage = Math.max(1, endPage - maxVisiblePages + 1);
     }
+
 
     // 이전 페이지 버튼
     pages.push(
@@ -113,6 +128,7 @@ const YoungFarmer = () => {
         <FaChevronLeft />
       </button>
     );
+
 
     // 페이지 번호 버튼
     for (let i = startPage; i <= endPage; i++) {
@@ -131,6 +147,7 @@ const YoungFarmer = () => {
       );
     }
 
+
     // 다음 페이지 버튼
     pages.push(
       <button
@@ -143,14 +160,16 @@ const YoungFarmer = () => {
       </button>
     );
 
+
     return pages;
   };
+
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mt-8 mb-16">  {/* 상단 여백 추가, 하단 여백 조정 */}
         <h1 className="text-4xl font-bold text-center mb-12">청년농 소개&영상</h1>
-        
+       
         {/* 카테고리 버튼 그룹 */}
         <div className="flex flex-wrap justify-center gap-4 mb-8">
           {categories.map((category) => (
@@ -158,8 +177,8 @@ const YoungFarmer = () => {
               key={category.code}
               onClick={() => handleCategoryChange(category.code)}
               className={`px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2
-                ${selectedCategory === category.code 
-                  ? "bg-[#3a9d1f] text-white shadow-lg transform scale-105" 
+                ${selectedCategory === category.code
+                  ? "bg-[#3a9d1f] text-white shadow-lg transform scale-105"
                   : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"}`}
             >
               <span className="text-xl">{category.icon}</span>
@@ -167,6 +186,7 @@ const YoungFarmer = () => {
             </button>
           ))}
         </div>
+
 
         {/* 사례 목록 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
@@ -183,6 +203,7 @@ const YoungFarmer = () => {
           )}
         </div>
 
+
         {/* 페이지네이션 */}
         {!loading && farmerList.length > 0 && (
           <div className="flex justify-center gap-2">
@@ -194,4 +215,8 @@ const YoungFarmer = () => {
   );
 };
 
+
 export default YoungFarmer;
+
+
+
