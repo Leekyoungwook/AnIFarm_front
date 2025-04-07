@@ -68,8 +68,8 @@ const Today = () => {
       
       // 저장된 쿠키 값 확인
       const savedChunkInfo = Cookies.get('frozen_price_chunks');
-      console.log('저장된 쿠키 원본:', savedChunkInfo);
-      console.log('디코딩된 쿠키:', decodeURIComponent(savedChunkInfo));
+      // console.log('저장된 쿠키 원본:', savedChunkInfo);
+      // console.log('디코딩된 쿠키:', decodeURIComponent(savedChunkInfo));
       
       // 각 청크 저장
       let savedCount = 0;
@@ -83,8 +83,8 @@ const Today = () => {
           
           // 각 청크의 저장된 값 확인
           const savedChunk = Cookies.get(`frozen_price_chunk_${index}`);
-          console.log(`청크 ${index} 원본:`, savedChunk);
-          console.log(`청크 ${index} 디코딩:`, decodeURIComponent(savedChunk));
+          // console.log(`청크 ${index} 원본:`, savedChunk);
+          // console.log(`청크 ${index} 디코딩:`, decodeURIComponent(savedChunk));
           
           savedCount++;
         } catch (e) {
@@ -149,13 +149,13 @@ const Today = () => {
     const updateTime = new Date(now);
     updateTime.setHours(15, 0, 0, 0);
 
-    console.log('updateData 호출:', {
-      hasLatestData: !!latestValidData,
-      isWeekend,
-      hasValidDpr1Data,
-      currentTime: now.toLocaleString(),
-      updateTime: updateTime.toLocaleString()
-    });
+    // console.log('updateData 호출:', {
+    //   hasLatestData: !!latestValidData,
+    //   isWeekend,
+    //   hasValidDpr1Data,
+    //   currentTime: now.toLocaleString(),
+    //   updateTime: updateTime.toLocaleString()
+    // });
 
     if (isWeekend) {
       if (frozenData && lastUpdateTime) {
@@ -198,16 +198,16 @@ const Today = () => {
       }
     } else {
       if (frozenData && lastUpdateTime) {
-        console.log('평일 오후 3시 이전: 프리징된 데이터 사용');
+        // console.log('평일 오후 3시 이전: 프리징된 데이터 사용');
         setPriceData(frozenData);
       } else {
-        console.log('평일 오후 3시 이전: 새로운 데이터 프리징');
+        // console.log('평일 오후 3시 이전: 새로운 데이터 프리징');
         setPriceData(latestValidData);
         // 저장 시점 확인
-        console.log('데이터 저장 시도:', {
-          hasData: !!latestValidData,
-          dataKeys: Object.keys(latestValidData)
-        });
+        // console.log('데이터 저장 시도:', {
+        //   hasData: !!latestValidData,
+        //   dataKeys: Object.keys(latestValidData)
+        // });
         saveToJsonFile(latestValidData, now);
       }
     }
@@ -235,9 +235,6 @@ const Today = () => {
         
         // API에서 새로운 데이터 가져오기
         const response = await axios.get(GET_PRICE_API_URL);
-        
-        // API 응답 로깅
-        console.log('API 응답:', response.data); // Vercel에서의 응답 확인
 
         // 응답 데이터 구조 확인
         if (response.data && response.data.data && Array.isArray(response.data.data.item)) {
@@ -362,10 +359,10 @@ const Today = () => {
       }
       timeUntilUpdate = updateTime.getTime() - now.getTime();
 
-      console.log('다음 업데이트 시간:', {
-        updateTime: updateTime.toLocaleString(),
-        timeUntilUpdate: Math.floor(timeUntilUpdate / 1000 / 60) + '분'
-      });
+      // console.log('다음 업데이트 시간:', {
+      //   updateTime: updateTime.toLocaleString(),
+      //   timeUntilUpdate: Math.floor(timeUntilUpdate / 1000 / 60) + '분'
+      // });
 
       const updateTimer = setTimeout(() => {
         console.log('자동 업데이트 실행');
