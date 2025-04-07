@@ -246,35 +246,30 @@ const Today = () => {
 
           items.forEach(item => {
             // 필요한 속성이 존재하는지 확인
-            if (!item.item_name || !item.dpr1 || !item.dpr2 || !item.unit || !item.category_code || !item.category_name) {
+            if (!item.item_name || !item.unit || !item.category_code || !item.category_name) {
               console.error('API 응답 데이터 형식이 올바르지 않습니다:', item);
               return; // 필요한 속성이 없으면 다음 아이템으로 넘어감
             }
 
             const itemName = item.item_name;
-            const hasDpr1 = item.dpr1 !== '-';
-            const hasDpr2 = item.dpr2 !== '-';
-            
-            if (hasDpr1) hasValidDpr1Data = true;
-            
-            if (!hasDpr1 && !hasDpr2) return;
+            const hasDpr1 = item.dpr1 !== '-' && item.dpr1 !== undefined;
+            const hasDpr2 = item.dpr2 !== '-' && item.dpr2 !== undefined;
 
-            if (!latestValidData[itemName] || 
-                (hasDpr1 && new Date(item.day1.replace(/[()]/g, '')) > new Date(latestValidData[itemName].date))) {
-              
+            // dpr1 또는 dpr2가 유효한 경우에만 처리
+            if (hasDpr1 || hasDpr2) {
+              if (hasDpr1) hasValidDpr1Data = true;
+
               const price = hasDpr1 ? item.dpr1 : item.dpr2;
-              const date = hasDpr1 ? item.day1 : item.day2;
               const previousPrice = hasDpr2 ? item.dpr2 : price;
-              const previousDate = hasDpr2 ? item.day2 : date;
-              
+
               const currentPrice = Number(price.replace(/,/g, ''));
               const lastPrice = Number(previousPrice.replace(/,/g, ''));
-              
+
               latestValidData[itemName] = {
                 price: price,
                 unit: item.unit,
-                date: date.replace(/[()]/g, ''),
-                previousDate: previousDate.replace(/[()]/g, ''),
+                date: item.day1, // 현재 날짜를 day1로 설정
+                previousDate: item.day2, // 이전 날짜를 day2로 설정
                 priceChange: currentPrice - lastPrice,
                 yesterdayPrice: lastPrice,
                 category_code: item.category_code,
