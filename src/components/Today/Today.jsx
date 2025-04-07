@@ -253,31 +253,30 @@ const Today = () => {
             }
 
             const itemName = item.item_name;
-            const hasDpr1 = item.dpr1 !== '-' && item.dpr1 !== undefined;
-            const hasDpr2 = item.dpr2 !== '-' && item.dpr2 !== undefined;
-
-            // dpr1 또는 dpr2가 유효한 경우에만 처리
-            if (hasDpr1 || hasDpr2) {
-              if (hasDpr1) hasValidDpr1Data = true;
-
-              const price = hasDpr1 ? item.dpr1 : item.dpr2;
-              const previousPrice = hasDpr2 ? item.dpr2 : price;
-
-              const currentPrice = Number(price.replace(/,/g, ''));
-              const lastPrice = Number(previousPrice.replace(/,/g, ''));
-
-              latestValidData[itemName] = {
-                price: price,
-                unit: item.unit,
-                date: item.day1, // 현재 날짜를 day1로 설정
-                previousDate: item.day2, // 이전 날짜를 day2로 설정
-                priceChange: currentPrice - lastPrice,
-                yesterdayPrice: lastPrice,
-                category_code: item.category_code,
-                category_name: item.category_name,
-                hasDpr1: hasDpr1
-              };
+            const prices = [item.dpr1, item.dpr2, item.dpr3, item.dpr4, item.dpr5, item.dpr6, item.dpr7];
+            
+            // 유효한 가격 찾기
+            const validPrices = prices.filter(price => price !== '-' && price !== undefined);
+            if (validPrices.length === 0) {
+              console.error('유효한 가격이 없습니다:', item);
+              return; // 유효한 가격이 없으면 다음 아이템으로 넘어감
             }
+
+            // 가장 최근 가격을 선택 (가장 마지막 유효한 가격)
+            const currentPrice = validPrices[validPrices.length - 1];
+            const previousPrice = validPrices.length > 1 ? validPrices[validPrices.length - 2] : currentPrice;
+
+            latestValidData[itemName] = {
+              price: currentPrice,
+              unit: item.unit,
+              date: item.day1, // 현재 날짜를 day1로 설정
+              previousDate: item.day2, // 이전 날짜를 day2로 설정
+              priceChange: Number(currentPrice.replace(/,/g, '')) - Number(previousPrice.replace(/,/g, '')),
+              yesterdayPrice: Number(previousPrice.replace(/,/g, '')),
+              category_code: item.category_code,
+              category_name: item.category_name,
+              hasDpr1: validPrices.includes(item.dpr1)
+            };
           });
 
           // 현재 시간이 오후 3시 이전인지 확인
